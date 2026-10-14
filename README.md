@@ -44,27 +44,27 @@ O trabalho tem como foco a modelagem e o armazenamento das informações necess�
 
 | Entidade | Descrição e informações armazenadas |
 | --- | --- |
-| `Titulo` | Conjunto maior: título, ano de lançamento, sinopse e classificação etária. |
-| `Filme` | Subconjunto de `Titulo`: duração e URL/arquivo de streaming. |
-| `Serie` | Subconjunto de `Titulo`: emissora/produtora original. |
+| `Midia` | Superclasse que armazena título, ano de lançamento, sinopse e classificação etária. |
+| `Filme` | Subconjunto de `Midia`: duração e URL/arquivo de streaming. |
+| `Serie` | Subconjunto de `Midia`: emissora/produtora original. |
 | `Temporada` | Pertence a uma `Serie` e armazena o número da temporada. |
 | `Episodio` | Pertence a uma `Temporada`: número do episódio, título, duração e URL/arquivo. |
-| `Genero` | Gêneros como Ação, Drama e Comédia, com relação N:N com `Titulo`. |
+| `Genero` | Gêneros como Ação, Drama e Comédia, com relação N:N com `Midia`. |
 
 ### Pessoal e produção
 
 | Entidade | Descrição e informações armazenadas |
 | --- | --- |
 | `Artista` | Nome, data de nascimento e nacionalidade. |
-| `Credito_Producao` | Entidade associativa N:N entre `Titulo` e `Artista`, armazenando papel e personagem. |
+| `Credito_Producao` | Entidade associativa N:N entre `Midia` e `Artista`, armazenando papel e personagem. |
 
 ### Interação e métricas
 
 | Entidade | Descrição e informações armazenadas |
 | --- | --- |
 | `Historico_Reproducao` | Entidade associativa entre `Perfil` e a mídia reproduzida, armazenando `minuto_parada`, `concluido` e `data_hora`. |
-| `Avaliacao` | Associação entre `Perfil` e `Titulo`, armazenando nota de 1 a 5 e `comentario`. |
-| `Favorito` / `Minha_Lista` | Associação entre `Perfil` e `Titulo`, armazenando a data em que o título foi salvo. |
+| `Avaliacao` | Associação entre `Perfil` e `Midia`, armazenando nota de 1 a 5 e `comentario`. |
+| `Favorito` / `Minha_Lista` | Associação entre `Perfil` e `Midia`, armazenando a data em que a mídia foi salva. |
 
 ## Modelagem do banco de dados
 
@@ -74,4 +74,77 @@ O trabalho tem como foco a modelagem e o armazenamento das informações necess�
 
 ### Modelo relacional
 
-![Modelo relacional do sistema de streaming](modelo_relacional.jpeg)
+![Modelo relacional do sistema de streaming](modelo_relacional.png)
+
+## Execução com Docker
+
+### Pré-requisito
+
+- Docker Desktop ou Docker Engine com o Docker Compose.
+
+### Inicializar o banco
+
+Na raiz do projeto, execute:
+
+```bash
+docker compose up -d
+```
+
+Na primeira inicialização, o container executa automaticamente:
+
+1. `streaming_schema_v2.sql`, que cria as tabelas e restrições;
+2. `sql/02_dados.sql`, que popula o banco com dados de demonstração.
+
+O serviço fica disponível em `localhost:5432` com as seguintes configurações:
+
+| Configuração | Valor |
+| --- | --- |
+| Banco | `streaming_db` |
+| Usuário | `streaming` |
+| Senha | `streaming` |
+| Porta | `5432` |
+
+Para utilizar outra porta no computador, defina `POSTGRES_PORT`. Por exemplo:
+
+```bash
+POSTGRES_PORT=5433 docker compose up -d
+```
+
+### Executar as três consultas
+
+```bash
+docker compose exec -T postgres \
+  psql -U streaming -d streaming_db -f /scripts/03_consultas.sql
+```
+
+Também é possível abrir o terminal interativo do PostgreSQL:
+
+```bash
+docker compose exec postgres psql -U streaming -d streaming_db
+```
+
+### Encerrar ou recriar o ambiente
+
+Para encerrar os containers sem apagar os dados:
+
+```bash
+docker compose down
+```
+
+Para apagar o volume e recriar o banco desde o início:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
+
+> O comando com `-v` apaga os dados armazenados no banco do ambiente Docker.
+
+## Arquivos da entrega
+
+| Arquivo | Finalidade |
+| --- | --- |
+| `streaming_schema_v2.sql` | Criação do banco e das restrições de integridade. |
+| `sql/02_dados.sql` | População reproduzível do banco. |
+| `sql/03_consultas.sql` | Três consultas com junções de várias tabelas. |
+| `compose.yaml` | Ambiente PostgreSQL padronizado para todos os integrantes. |
