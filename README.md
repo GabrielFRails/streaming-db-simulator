@@ -112,6 +112,8 @@ POSTGRES_PORT=5433 docker compose up -d
 
 ### Executar as três consultas
 
+Os cenários, critérios e resultados esperados estão em [Consultas da etapa 5](sql/LEIA-ME-consultas.md).
+
 ```bash
 docker compose exec -T postgres \
   psql -U streaming -d streaming_db -f /scripts/03_consultas.sql
